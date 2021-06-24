@@ -1,29 +1,45 @@
-import React, { FC } from 'react';
+import { useState, useEffect } from 'react';
 import { connect } from 'react-redux';
-import { Todo, fetchTodos } from '../actions';
+import { Todo, fetchTodos, deleteTodo } from '../actions';
 import { StoreState } from '../reducers';
 
 interface AppProps {
     todos: Todo[];
-    fetchTodos(): any
+    fetchTodos(): Function;
+    deleteTodo(): Function;
 };
 
-const App: FC<AppProps> = ({ todos, fetchTodos }) => {
+const App = ({ todos, fetchTodos, deleteTodo }: AppProps) => {
+    const [ fetching, setFetching ] = useState(false);
 
     const onButtonClick = (): void => {
         fetchTodos();
+        setFetching(true);
     };
 
-    const renderList = (): JSX.Element[] => {
-        return todos.map((todo: Todo) => {
-            return <div key={todo.id}>{todo.title}</div>
-        })
-    }
+    const onTodoClick = (id: number): void => {
+        deleteTodo();
+    };
+
+    useEffect(() => {
+        if (todos && todos.length !== 0) {
+            setFetching(false);
+        };
+    }, [fetching, todos]);
 
     return (
         <div>
             <button onClick={onButtonClick}>Fetch</button>
-            {renderList()}
+            {fetching ? 'Loading' : null}
+            {todos.map((todo: Todo) => {
+                return (
+                    <div 
+                        key={todo.id}
+                        onClick={() => onTodoClick(todo.id)}>
+                        {todo.title}
+                    </div>
+                )
+            })}
         </div>
     );
 };
@@ -34,12 +50,4 @@ const mapStateToProps = (state: StoreState): { todos: Todo[]} => {
     };
 };
 
-export default connect( mapStateToProps, { fetchTodos })(App);
-
-/*
-            {todos.map((todo: Todo) => {
-                return (
-                    <div key={todo.id}>{todo.title}</div>
-                )
-            })}
-*/
+export default connect( mapStateToProps, { fetchTodos, deleteTodo })(App);
